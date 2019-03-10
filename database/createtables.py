@@ -48,6 +48,7 @@ FOREIGN KEY (artistID) REFERENCES artist(id)
 mycursor.execute(create_art)
 ####################################################################
 
+
 ############################   USER  ###############################
 drop_table = """DROP TABLE IF EXISTS user;"""
 mycursor.execute(drop_table)
@@ -58,6 +59,7 @@ id INT AUTO_INCREMENT PRIMARY KEY,
 username VARCHAR(64) NOT NULL UNIQUE
 );"""
 mycursor.execute(create_user)
+####################################################################
 
 
 ############################   LIKES  ###########################################

@@ -23,6 +23,17 @@ class DatabaseAPIResource():
                 self.cursor.execute(sql, val)
                 self.dbconn.commit()
 
+            def get_user(self, username, fields):
+                assert(username)
+
+                ","
+                sql = "SELECT %s FROM user WHERE".format()
+
+
+            def execute_sql(self, raw_sql):
+                self.cursor.execute(raw_sql)
+
+
         self.database_api = ArtifyDatabaseAPI()
         return self.database_api
 
@@ -36,4 +47,5 @@ class DatabaseAPIResource():
 if __name__ == '__main__':
     # Example usage of the Artify Database API
     with DatabaseAPIResource() as artifyDbAPI:
-        artifyDbAPI.insert_user(username="ballislife2")
+        artifyDbAPI.insert_user(username="ballislife3")
+
