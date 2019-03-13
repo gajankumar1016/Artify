@@ -14,7 +14,7 @@ class DbApiInstance():
 
                 self.cursor = self.dbconn.cursor(buffered=True)
 
-            def insert_user(self, username, password_hash, age=None, gender=None):
+            def insert_user(self, username: str, password_hash: str, age=None, gender=None):
                 assert(username)
                 assert(password_hash)
 
@@ -77,17 +77,21 @@ class DbApiInstance():
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.database_api.cursor.close()
+        self.database_api.dbconn.close()
 
 
 
 if __name__ == '__main__':
     # Example usage of the Artify Database API
     with DbApiInstance() as artifyDbAPI:
-        artifyDbAPI.insert_user(username="ballislife6", password_hash="abcd123", gender="F", age=80)
+        # TODO: set the demo up smarter so don't have to keep changeing username; could use random usernames
+        artifyDbAPI.insert_user(username="ballislife15", password_hash="abcd123", gender="F", age=80)
 
         user_exists = artifyDbAPI.user_exists(username="ballislife50")
         print("User exists? ", user_exists)
 
-        valid_login = artifyDbAPI.verify_username_and_password(username="ballislife3", password_hash="abcd12333")
+        valid_login = artifyDbAPI.verify_username_and_password(username="ballislife3", password_hash="abcd123")
         print("Valid login? ", valid_login)
+
+        print(artifyDbAPI.execute_sql("SELECT * FROM user", return_type="fetchall"))
 
