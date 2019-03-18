@@ -1,6 +1,6 @@
 1. Create a file in the database directory called secrets.py
 2. Write the following line in the secrets.py file:
-        dbpassword = "<insert password here>"
+        dbpassword = "<insert root db password here>"
 3. Run "python setupdb.py"
 -I condensed everything to one file to make things simpler. The script actually
 deletes whe whole database and recreates it.

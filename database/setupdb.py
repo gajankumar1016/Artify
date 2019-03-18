@@ -1,5 +1,7 @@
 import mysql.connector
 import secrets
+import pandas as pd
+from dbutils import DbApiInstance
 
 # Drop database and recreate
 mydb = mysql.connector.connect(
@@ -64,6 +66,8 @@ mycursor.execute(create_artist)
 
 
 ############################   ART   #################################
+# TODO: May want to put some uniqueness constraints on this table
+
 drop_table = """DROP TABLE IF EXISTS art;"""
 mycursor.execute(drop_table)
 
@@ -82,7 +86,7 @@ FOREIGN KEY (artist_id) REFERENCES artist(id),
 FOREIGN KEY (owner_id) REFERENCES user(id)
 );"""
 mycursor.execute(create_art)
-####################################################################
+######################################################################
 
 
 ############################   LIKES  ###########################################
@@ -124,3 +128,12 @@ mycursor.execute(create_transaction)
 
 mycursor.close()
 mydb.close()
+
+
+
+# Add starter artworks
+df = pd.read_csv('./artinfo.csv', sep="|")
+
+with DbApiInstance() as artifyDbAPI:
+    for index, row in df.iterrows():
+        artifyDbAPI.insert_art(title=row["Title"], file_name=row["FileName"], year=row["Year"], style=row["Style"])

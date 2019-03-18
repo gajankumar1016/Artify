@@ -70,6 +70,25 @@ class DbApiInstance():
                     return result
 
 
+            def insert_art(self, title: str, file_name: str, year=None, style=None):
+                assert(title)
+                assert(file_name)
+
+                fields = ['title', 'file_name']
+                vals = [title, file_name]
+                if year:
+                    fields.append('year')
+                    vals.append(year)
+                if style:
+                    fields.append('style')
+                    vals.append(style)
+
+                sql = "INSERT INTO art (" + ','.join(fields) +") VALUES (" + ','.join(["%s"] * len(fields)) + ")"
+
+                self.cursor.execute(sql, vals)
+                self.dbconn.commit()
+
+
         self.database_api = ArtifyDatabaseAPI()
         return self.database_api
 
