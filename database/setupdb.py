@@ -18,7 +18,6 @@ mycursor.close()
 mydb.close()
 
 
-
 # Create new connection for creating tables in the artifydatabase
 mydb = mysql.connector.connect(
     host="localhost",
@@ -31,6 +30,7 @@ mycursor = mydb.cursor()
 
 mycursor.execute("SHOW DATABASES")
 
+print("Current databases:")
 for x in mycursor:
     print(x)
 
@@ -119,11 +119,27 @@ seller_id INTEGER,
 buyer_id INTEGER,
 art_id INTEGER,
 status VARCHAR(16),
-FOREIGN KEY (seller_id) REFERENCES user (id) ON DELETE RESTRICT ON UPDATE CASCADE,
-FOREIGN KEY (buyer_id) REFERENCES user (id) ON DELETE RESTRICT ON UPDATE CASCADE,
-FOREIGN KEY (art_id) REFERENCES art (id) ON DELETE RESTRICT ON UPDATE CASCADE
+FOREIGN KEY (seller_id) REFERENCES user (id) ON DELETE RESTRICT,
+FOREIGN KEY (buyer_id) REFERENCES user (id) ON DELETE RESTRICT,
+FOREIGN KEY (art_id) REFERENCES art (id) ON DELETE RESTRICT
 );"""
 mycursor.execute(create_transaction)
+###################################################################################
+
+############################   SIMILARITY   #######################################
+drop_table = """DROP TABLE IF EXISTS similarity;"""
+mycursor.execute(drop_table)
+
+create_similarity = \
+"""CREATE TABLE similarity (
+base_art_id INTEGER,
+target_art_id INTEGER,
+cos_sim DOUBLE,
+FOREIGN KEY (base_art_id) REFERENCES art(id) ON DELETE CASCADE,
+FOREIGN KEY (target_art_id) REFERENCES art(id) ON DELETE CASCADE,
+CONSTRAINT PK_similarity PRIMARY KEY (base_art_id, target_art_id)
+);"""
+mycursor.execute(create_similarity)
 ###################################################################################
 
 mycursor.close()
@@ -136,4 +152,4 @@ df = pd.read_csv('./artinfo.csv', sep="|")
 
 with DbApiInstance() as artifyDbAPI:
     for index, row in df.iterrows():
-        artifyDbAPI.insert_art(title=row["Title"], file_name=row["FileName"], year=row["Year"], style=row["Style"])
+        artifyDbAPI.insert_art(IMAGES_DIR="../production_images", title=row["Title"], file_name=row["FileName"], year=row["Year"], style=row["Style"])

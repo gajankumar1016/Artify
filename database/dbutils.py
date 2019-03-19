@@ -1,3 +1,8 @@
+import sys
+import os
+sys.path.insert(0, "..")
+sys.path.insert(0, "../similarity_model")
+from similarity_model import cos_sim
 import mysql.connector
 import secrets
 
@@ -13,6 +18,7 @@ class DbApiInstance():
                 )
 
                 self.cursor = self.dbconn.cursor(buffered=True)
+
 
             def insert_user(self, username: str, password_hash: str, age=None, gender=None):
                 assert(username)
@@ -56,21 +62,8 @@ class DbApiInstance():
                 pass
 
 
-            def execute_sql(self, raw_sql, vals=None, return_type=None):
-                if vals:
-                    self.cursor.execute(raw_sql, vals)
-                else:
-                    self.cursor.execute(raw_sql)
-
-                if return_type == 'fetchall':
-                    result = self.cursor.fetchall()
-                    return result
-                elif return_type == 'fetchone':
-                    result = self.cursor.fetchone()
-                    return result
-
-
-            def insert_art(self, title: str, file_name: str, year=None, style=None):
+            def insert_art(self, IMAGES_DIR, title: str, file_name: str, year=None, style=None):
+                assert(IMAGES_DIR)
                 assert(title)
                 assert(file_name)
 
@@ -87,6 +80,39 @@ class DbApiInstance():
 
                 self.cursor.execute(sql, vals)
                 self.dbconn.commit()
+
+                self._compute_similarities(IMAGES_DIR=IMAGES_DIR, base_id=self.cursor.lastrowid, base_img_fname=file_name)
+
+
+            def _compute_similarities(self, IMAGES_DIR, base_id, base_img_fname):
+                base_img_path = os.path.join(IMAGES_DIR, base_img_fname)
+                sql = "SELECT id, file_name FROM art WHERE id <> {}".format(base_id)
+                self.cursor.execute(sql)
+                arts = self.cursor.fetchall()
+                print("Comparing art # {} with: ".format(base_id), arts)
+                for art in arts:
+                    target_art_id = art[0]
+                    target_image_path = os.path.join(IMAGES_DIR, art[1])
+
+                    sql = "INSERT INTO similarity (base_art_id, target_art_id, cos_sim) VALUES ({}, {}, {});"\
+                        .format(base_id, target_art_id, cos_sim(base_img_path, target_image_path))
+                    self.cursor.execute(sql)
+
+                self.dbconn.commit()
+
+
+            def execute_sql(self, raw_sql, vals=None, return_type=None):
+                if vals:
+                    self.cursor.execute(raw_sql, vals)
+                else:
+                    self.cursor.execute(raw_sql)
+
+                if return_type == 'fetchall':
+                    result = self.cursor.fetchall()
+                    return result
+                elif return_type == 'fetchone':
+                    result = self.cursor.fetchone()
+                    return result
 
 
         self.database_api = ArtifyDatabaseAPI()
