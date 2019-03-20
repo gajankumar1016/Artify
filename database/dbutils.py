@@ -4,7 +4,7 @@ sys.path.insert(0, "..")
 sys.path.insert(0, "../similarity_model")
 from similarity_model import cos_sim
 import mysql.connector
-import secrets
+from .secrets import dbpassword
 
 class DbApiInstance():
     def __enter__(self):
@@ -13,7 +13,7 @@ class DbApiInstance():
                 self.dbconn = mysql.connector.connect(
                     host="localhost",
                     user="root",
-                    passwd=secrets.dbpassword,
+                    passwd=dbpassword,
                     database="artifydatabase"
                 )
 
@@ -57,9 +57,25 @@ class DbApiInstance():
                 return False
 
 
-            def get_user(self, username, fields):
+            def get_user_by_username(self, username):
                 assert(username)
-                pass
+                sql = "SELECT * FROM user WHERE username=%s"
+                self.cursor.execute(sql, (username,))
+                result = self.cursor.fetchone()
+                return result
+
+
+            def get_recommended_art(self, userid):
+                sql = "SELECT * FROM likes WHERE user_id = %s"
+                self.cursor.execute(sql, (userid,))
+                likes = self.cursor.fetchall()
+                # TODO: Do a bunch of joins instead
+
+                sql = "SELECT * FROM art LIMIT 6"
+                self.cursor.execute(sql)
+                art = self.cursor.fetchall()
+                return art
+
 
 
             def insert_art(self, IMAGES_DIR, title: str, file_name: str, year=None, style=None):

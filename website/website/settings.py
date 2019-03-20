@@ -9,6 +9,12 @@ https://docs.djangoproject.com/en/2.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.1/ref/settings/
 """
+import sys
+sys.path.insert(0, '../')
+sys.path.insert(0, '../../')
+sys.path.insert(0, '../../database')
+from database.secrets import dbpassword
+
 
 import os
 
@@ -74,13 +80,22 @@ WSGI_APPLICATION = 'website.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+#     }
+# }
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'artifydatabase',
+        'USER': 'root',
+        'PASSWORD': dbpassword,
+        'HOST': 'localhost',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
@@ -100,6 +115,10 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# ADDED 3/20
+# AUTHENTICATION_BACKENDS = (
+#     'art.backends.CustomBackend',
+# )
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
