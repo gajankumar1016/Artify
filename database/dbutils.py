@@ -81,6 +81,7 @@ class DbApiInstance():
                 self.cursor.execute(sql, vals)
                 self.dbconn.commit()
 
+                # May want to create separate processes to handle similarity computation
                 self._compute_similarities(IMAGES_DIR=IMAGES_DIR, base_id=self.cursor.lastrowid, base_img_fname=file_name)
 
 
