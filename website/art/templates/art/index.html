@@ -1,6 +1,43 @@
 {% extends 'art/base.html' %}
 
 {% block body %}
-<img src="../../media/{{sample_img}}">
 
+<div class="art-container container-fluid">
+
+    <!-- Art -->
+    <div class="row">
+        <div class="col-sm-12">
+            <h3>Recommended art for {{ user.username }}</h3>
+        </div>
+        {% if artworks %}
+            {% for art in artworks %}
+                <div class="col-sm-4 col-lg-2">
+                    <div class="thumbnail">
+                        <a href="{% url 'art:detail' art.id %}">
+                            <img src="../../media/{{art.file_name}}" class="img-responsive">
+                        </a>
+                        <div class="caption">
+                            <h2>{{ art.title }}</h2>
+                            <h4>{{ art.artist }}</h4>
+
+                            <!-- View Details -->
+                            <a href="{% url 'art:detail' art.id %}" class="btn btn-primary btn-sm" role="button">View Details</a>
+
+                        </div>
+                    </div>
+                </div>
+                {% cycle '' '' '' '' '' '<div class="clearfix visible-lg"></div>' %}
+            {% endfor %}
+        {% else %}
+            <div class="col-sm-12">
+                <br>
+                <a href="{% url 'art:add_art' %}">
+                    <button type="button" class="btn btn-success">
+                        <span class="glyphicon glyphicon-plus"></span>&nbsp; Add Art
+                    </button>
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
 {% endblock %}

@@ -15,7 +15,20 @@ def index(request):
     user_id = request.user.id
     print(user_id)
 
-    return render(request, 'art/index.html', {'sample_img': "3.jpg"})
+    with DbApiInstance() as ArtifyDbAPI:
+        artworks = ArtifyDbAPI.get_recommended_art(user_id)
+
+    return render(request, 'art/index.html', {'artworks':artworks})
+
+def detail(request, art_id):
+    if not request.user.is_authenticated:
+        return redirect('/art/login_user')
+    else:
+        user = request.user
+        with DbApiInstance() as dbapi:
+            art_info = dbapi.get_art_by_id(art_id)
+        return render(request, 'art/detail.html', {'art_info':art_info, 'user':user})
+
 
 def register(request):
     form = UserForm(request.POST or None)

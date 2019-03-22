@@ -6,6 +6,15 @@ from similarity_model import cos_sim
 import mysql.connector
 from .secrets import dbpassword
 
+class ArtDetail:
+    def __init__(self, **kwargs):
+        for field in ('id', 'title', 'description', 'file_name', 'year', 'price', 'style', 'artist'):
+            setattr(self, field, kwargs.get(field, None))
+
+def art_tuple_to_art_detail_obj(art_tuple):
+    return ArtDetail(id=art_tuple[0], title=art_tuple[1], file_name=art_tuple[3], year=art_tuple[4], style=art_tuple[6])
+
+
 class DbApiInstance():
     def __enter__(self):
         class ArtifyDatabaseAPI:
@@ -65,17 +74,23 @@ class DbApiInstance():
                 return result
 
 
-            def get_recommended_art(self, userid):
+            def get_recommended_art(self, userid, limit=9):
                 sql = "SELECT * FROM likes WHERE user_id = %s"
                 self.cursor.execute(sql, (userid,))
                 likes = self.cursor.fetchall()
                 # TODO: Do a bunch of joins instead
 
-                sql = "SELECT * FROM art LIMIT 6"
-                self.cursor.execute(sql)
-                art = self.cursor.fetchall()
-                return art
+                sql = "SELECT * FROM art LIMIT %s"
+                self.cursor.execute(sql, (limit,))
+                art_tuples = self.cursor.fetchall()
+                return [art_tuple_to_art_detail_obj(a) for a in art_tuples]
 
+
+            def get_art_by_id(self, artid):
+                sql = "SELECT * FROM art WHERE id = %s"
+                self.cursor.execute(sql, (artid,))
+                art = self.cursor.fetchone()
+                return art_tuple_to_art_detail_obj(art)
 
 
             def insert_art(self, IMAGES_DIR, title: str, file_name: str, year=None, style=None):
