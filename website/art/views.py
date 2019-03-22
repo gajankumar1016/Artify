@@ -6,14 +6,15 @@ from database.dbutils import DbApiInstance
 from django.shortcuts import render, redirect
 from .forms import UserForm, ArtForm
 from django.contrib.auth import authenticate, login, logout
+from django.core.files.storage import FileSystemStorage
+import uuid
+
 # Create your views here.
 
 def index(request):
-    print("In index")
     if not request.user.is_authenticated:
-        return render(request, 'art/login.html')
+        return redirect('/art/login_user')
     user_id = request.user.id
-    print(user_id)
 
     with DbApiInstance() as ArtifyDbAPI:
         artworks = ArtifyDbAPI.get_recommended_art(user_id)
@@ -42,6 +43,7 @@ def register(request):
         print(username, password)
         user.set_password(password)
         user.save()
+        # Also need to add user to our user table; could add extra fields that may not be in auth_user table
         with DbApiInstance() as ArtifyDbAPI:
             ArtifyDbAPI.insert_user(username=username, password_hash=password)
 
@@ -51,15 +53,6 @@ def register(request):
                 login(request, user)
                 print("User has been logged in")
                 return redirect('/art')
-
-        # with DbApiInstance() as ArtifyDbAPI:
-        #     if ArtifyDbAPI.user_exists(username):
-        #         # User already exists! Probably should display error
-        #         print("Username already taken")
-        #         return render(request, 'art/register.html', context)
-        #
-        #     ArtifyDbAPI.insert_user(username=username, password_hash=password)
-        #     return render(request, 'art/login.html')
 
     return render(request, 'art/register.html', context)
 
@@ -86,10 +79,29 @@ def logout_user(request):
     return redirect('/art/login_user')
 
 def add_art(request):
-    # TODO: authentication
-    authenticated = True
-    if not authenticated:
-        #Redirect to login page
-        pass
-    else:
-        return render(request, 'art/add_art.html')
+    if not request.user.is_authenticated:
+        return redirect('/art/login_user')
+
+    form = ArtForm(request.POST or None, request.FILES or None)
+    if form.is_valid():
+        title = form.cleaned_data['title']
+        style = form.cleaned_data['style']
+        year = form.cleaned_data['year']
+        user_id = request.user.id
+        file = request.FILES['art_image']
+        fs = FileSystemStorage()
+        file_ext = file.name.split('.')[-1]
+        print(file_ext)
+        unique_fname = str(uuid.uuid4()) + '.' + file_ext
+        fname = fs.save(unique_fname, file)
+        print(fname)
+
+        with DbApiInstance() as artifyDbAPI:
+            artifyDbAPI.insert_art(IMAGES_DIR="./media", title=title, file_name=fname, year=year, style=style,
+                                   owner_id=user_id)
+
+    context = {
+        "form": form,
+    }
+
+    return render(request, 'art/add_art.html', context)

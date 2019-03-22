@@ -80,7 +80,7 @@ create_art = \
 id INT AUTO_INCREMENT PRIMARY KEY,
 title VARCHAR(128) NOT NULL,
 description VARCHAR(512),
-file_name VARCHAR(20) NOT NULL,
+file_name VARCHAR(64) NOT NULL,
 year VARCHAR(10),
 price DOUBLE,
 style VARCHAR(64),

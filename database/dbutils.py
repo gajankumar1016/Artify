@@ -74,7 +74,7 @@ class DbApiInstance():
                 return result
 
 
-            def get_recommended_art(self, userid, limit=9):
+            def get_recommended_art(self, userid, limit=20):
                 sql = "SELECT * FROM likes WHERE user_id = %s"
                 self.cursor.execute(sql, (userid,))
                 likes = self.cursor.fetchall()
@@ -93,7 +93,7 @@ class DbApiInstance():
                 return art_tuple_to_art_detail_obj(art)
 
 
-            def insert_art(self, IMAGES_DIR, title: str, file_name: str, year=None, style=None):
+            def insert_art(self, IMAGES_DIR, title: str, file_name: str, year=None, style=None, owner_id=None):
                 assert(IMAGES_DIR)
                 assert(title)
                 assert(file_name)
@@ -106,6 +106,9 @@ class DbApiInstance():
                 if style:
                     fields.append('style')
                     vals.append(style)
+                if owner_id:
+                    fields.append('owner_id')
+                    vals.append(owner_id)
 
                 sql = "INSERT INTO art (" + ','.join(fields) +") VALUES (" + ','.join(["%s"] * len(fields)) + ")"
 
@@ -149,7 +152,6 @@ class DbApiInstance():
 
         self.database_api = ArtifyDatabaseAPI()
         return self.database_api
-
 
 
     def __exit__(self, exc_type, exc_val, exc_tb):
