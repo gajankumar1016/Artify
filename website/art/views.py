@@ -50,7 +50,7 @@ def register(request):
             if user.is_active:
                 login(request, user)
                 print("User has been logged in")
-                return render(request, 'art/index.html')
+                return redirect('/art')
 
         # with DbApiInstance() as ArtifyDbAPI:
         #     if ArtifyDbAPI.user_exists(username):

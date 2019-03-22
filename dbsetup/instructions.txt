@@ -7,14 +7,19 @@
 3. Run "python setupdb.py"
 -I condensed everything to one file to make things simpler. The script actually
 deletes whe whole database and recreates it.
+
+Then run the django migrations (python manage.py migrate). This will create the auth_user table and several more tables.
+You will have to run the migrations every time you run setupdb.py
+
 4. To access the api, you will probably need to insert a couple lines such as the following at the top of your python file:
 
 import sys
 sys.path.insert(0, '..')                  # Path to Artify directory
 sys.path.insert(0, '<path to >/database') # e.g. "../database"
-
 from database.dbutils import DbApiInstance
 
 (See https://stackoverflow.com/questions/4383571/importing-files-from-different-folder for more info)
+
+Look at views.py in the art app for an example
 
 5. Check out the custom functions already defined in dbutils before re-inventing stuff from scratch.

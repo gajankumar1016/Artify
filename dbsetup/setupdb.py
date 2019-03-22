@@ -1,13 +1,17 @@
 import mysql.connector
-import secrets
 import pandas as pd
-from dbutils import DbApiInstance
+
+import sys
+sys.path.insert(0, '..')
+sys.path.insert(0, '../database')
+from database.dbutils import DbApiInstance
+from database.secrets import dbpassword
 
 # Drop database and recreate
 mydb = mysql.connector.connect(
         host="localhost",
         user="root",
-        passwd=secrets.dbpassword,
+        passwd=dbpassword,
     )
 
 mycursor = mydb.cursor()
@@ -22,7 +26,7 @@ mydb.close()
 mydb = mysql.connector.connect(
     host="localhost",
     user="root",
-    passwd=secrets.dbpassword,
+    passwd=dbpassword,
     database="artifydatabase"
 )
 
@@ -152,4 +156,4 @@ df = pd.read_csv('./artinfo.csv', sep="|")
 
 with DbApiInstance() as artifyDbAPI:
     for index, row in df.iterrows():
-        artifyDbAPI.insert_art(IMAGES_DIR="../production_images", title=row["Title"], file_name=row["FileName"], year=row["Year"], style=row["Style"])
+        artifyDbAPI.insert_art(IMAGES_DIR="../devimages", title=row["Title"], file_name=row["FileName"], year=row["Year"], style=row["Style"])
