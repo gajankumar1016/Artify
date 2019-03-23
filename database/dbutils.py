@@ -74,14 +74,21 @@ class DbApiInstance():
                 return result
 
 
-            def get_recommended_art(self, userid, limit=20):
+            def get_recommended_art(self, user_id, limit=20):
                 sql = "SELECT * FROM likes WHERE user_id = %s"
-                self.cursor.execute(sql, (userid,))
+                self.cursor.execute(sql, (user_id,))
                 likes = self.cursor.fetchall()
                 # TODO: Do a bunch of joins instead
 
                 sql = "SELECT * FROM art LIMIT %s"
                 self.cursor.execute(sql, (limit,))
+                art_tuples = self.cursor.fetchall()
+                return [art_tuple_to_art_detail_obj(a) for a in art_tuples]
+
+
+            def get_user_art(self, user_id):
+                sql = "SELECT * FROM art WHERE owner_id = %s"
+                self.cursor.execute(sql, (user_id,))
                 art_tuples = self.cursor.fetchall()
                 return [art_tuple_to_art_detail_obj(a) for a in art_tuples]
 

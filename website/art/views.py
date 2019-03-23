@@ -14,12 +14,23 @@ import uuid
 def index(request):
     if not request.user.is_authenticated:
         return redirect('/art/login_user')
-    user_id = request.user.id
 
+    user_id = request.user.id
     with DbApiInstance() as ArtifyDbAPI:
         artworks = ArtifyDbAPI.get_recommended_art(user_id)
 
     return render(request, 'art/index.html', {'artworks':artworks})
+
+def user_art(request):
+    if not request.user.is_authenticated:
+        return redirect('/art/login_user')
+
+    user_id = request.user.id
+    with DbApiInstance() as ArtifyDbAPI:
+        artworks = ArtifyDbAPI.get_user_art(user_id)
+
+    return render(request, 'art/user_art.html', {'artworks': artworks})
+
 
 def detail(request, art_id):
     if not request.user.is_authenticated:
@@ -99,6 +110,8 @@ def add_art(request):
         with DbApiInstance() as artifyDbAPI:
             artifyDbAPI.insert_art(IMAGES_DIR="./media", title=title, file_name=fname, year=year, style=style,
                                    owner_id=user_id)
+
+        return redirect('/art/user_art')
 
     context = {
         "form": form,
