@@ -23,6 +23,11 @@
                             <!-- View Details -->
                             <a href="{% url 'art:detail' art.id %}" class="btn btn-primary btn-sm" role="button">View Details</a>
 
+                             <!-- Favorite Album -->
+                            <a href="{% url 'art:like_art' art.id %}" class="btn btn-default btn-sm btn-favorite" role="button">
+                                <span class="glyphicon glyphicon-star {% if art.is_liked %}active{% endif %}"></span>
+                            </a>
+
                         </div>
                     </div>
                 </div>

@@ -8,10 +8,14 @@ from .secrets import dbpassword
 
 class ArtDetail:
     def __init__(self, **kwargs):
-        for field in ('id', 'title', 'description', 'file_name', 'year', 'price', 'style', 'artist'):
+        for field in ('id', 'title', 'description', 'file_name', 'year', 'price', 'style', 'artist', 'is_liked'):
             setattr(self, field, kwargs.get(field, None))
 
-def art_tuple_to_art_detail_obj(art_tuple):
+def art_tuple_to_art_detail_obj(art_tuple, includes_like_status=False, user_id=None):
+    if includes_like_status:
+        return ArtDetail(id=art_tuple[0], title=art_tuple[1], file_name=art_tuple[3], year=art_tuple[4],
+                         style=art_tuple[6], is_liked=bool(art_tuple[9] == user_id))
+
     return ArtDetail(id=art_tuple[0], title=art_tuple[1], file_name=art_tuple[3], year=art_tuple[4], style=art_tuple[6])
 
 
@@ -42,7 +46,7 @@ class DbApiInstance():
                     fields.append('gender')
                     vals.append(gender)
 
-                sql = "INSERT INTO user (" + ','.join(fields) +") VALUES (" + ','.join(["%s"] * len(fields)) + ")"
+                sql = "INSERT INTO user (" + ','.join(fields) +") VALUES (" + ','.join(["%s"] * len(fields)) + ");"
 
                 self.cursor.execute(sql, vals)
                 self.dbconn.commit()
@@ -78,12 +82,16 @@ class DbApiInstance():
                 sql = "SELECT * FROM likes WHERE user_id = %s"
                 self.cursor.execute(sql, (user_id,))
                 likes = self.cursor.fetchall()
-                # TODO: Do a bunch of joins instead
+                # TODO: Do a bunch of joins instead and actually make a useful query
 
-                sql = "SELECT * FROM art LIMIT %s"
+                sql = """
+                SELECT * 
+                FROM art LEFT JOIN likes ON art.id = likes.art_id
+                LIMIT %s;
+                """
                 self.cursor.execute(sql, (limit,))
                 art_tuples = self.cursor.fetchall()
-                return [art_tuple_to_art_detail_obj(a) for a in art_tuples]
+                return [art_tuple_to_art_detail_obj(a, includes_like_status=True, user_id=user_id) for a in art_tuples]
 
 
             def get_user_art(self, user_id):
@@ -94,14 +102,34 @@ class DbApiInstance():
 
 
             def get_art_by_id(self, artid):
-                sql = "SELECT * FROM art WHERE id = %s"
+                sql = "SELECT * FROM art LEFT JOIN likes ON art.id = likes.art_id WHERE art.id = %s;"
                 self.cursor.execute(sql, (artid,))
                 art = self.cursor.fetchone()
-                return art_tuple_to_art_detail_obj(art)
+                return art_tuple_to_art_detail_obj(art, includes_like_status=True)
+
 
             def delete_art(self, art_id):
-                sql = "DELETE FROM art WHERE id = %s"
+                sql = "DELETE FROM art WHERE id = %s;"
                 self.cursor.execute(sql, (art_id, ))
+                self.dbconn.commit()
+
+
+            def insert_like(self, user_id, art_id):
+                sql = "INSERT INTO likes (user_id, art_id) VALUES (%s, %s);"
+                self.cursor.execute(sql, (user_id, art_id))
+                self.dbconn.commit()
+
+
+            def does_like_exist(self, user_id, art_id):
+                sql = "SELECT * FROM likes WHERE user_id = %s AND art_id = %s;"
+                self.cursor.execute(sql, (user_id, art_id))
+                like_exists = bool(self.cursor.fetchone())
+                return like_exists
+
+
+            def delete_like(self, user_id, art_id):
+                sql = "DELETE FROM likes WHERE user_id = %s AND art_id = %s"
+                self.cursor.execute(sql, (user_id, art_id))
                 self.dbconn.commit()
 
 
@@ -122,7 +150,7 @@ class DbApiInstance():
                     fields.append('owner_id')
                     vals.append(owner_id)
 
-                sql = "INSERT INTO art (" + ','.join(fields) +") VALUES (" + ','.join(["%s"] * len(fields)) + ")"
+                sql = "INSERT INTO art (" + ','.join(fields) +") VALUES (" + ','.join(["%s"] * len(fields)) + ");"
 
                 self.cursor.execute(sql, vals)
                 self.dbconn.commit()

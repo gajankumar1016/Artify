@@ -4,6 +4,7 @@ sys.path.insert(0, '../../')
 sys.path.insert(0, '../../database')
 from database.dbutils import DbApiInstance
 from django.shortcuts import render, redirect
+from django.http import JsonResponse
 from .forms import UserForm, ArtForm
 from django.contrib.auth import authenticate, login, logout
 from django.core.files.storage import FileSystemStorage
@@ -121,10 +122,31 @@ def add_art(request):
 
 
 def delete_art(request, art_id):
+    # TODO: Prevent user from deleting another user's art
+    if not request.user.is_authenticated:
+        return redirect('/art/login_user')
+
     with DbApiInstance() as dbapi:
         art = dbapi.get_art_by_id(art_id)
         fs = FileSystemStorage()
         fs.delete(art.file_name)
         dbapi.delete_art(art_id)
     return redirect('/art/user_art')
+
+def like_art(request, art_id):
+    if not request.user.is_authenticated:
+        return redirect('/art/login_user')
+
+    user_id = request.user.id
+    with DbApiInstance() as dbapi:
+        like_exists = dbapi.does_like_exist(user_id, art_id)
+        if like_exists:
+            dbapi.delete_like(user_id, art_id)
+        else:
+            dbapi.insert_like(user_id, art_id)
+
+    # TODO: return JsonResponse instead and implement javascript so whole page doesn't scroll
+    # return JsonResponse({'success': True})
+    return redirect('/art/')
+
 

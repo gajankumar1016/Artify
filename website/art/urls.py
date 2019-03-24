@@ -11,5 +11,6 @@ urlpatterns = [
     url(r'^logout_user$', views.logout_user, name='logout_user'),
     url(r'^add_art$', views.add_art, name='add_art'),
     url(r'^(?P<art_id>[0-9]+)/$', views.detail, name='detail'),
-    url(r'^(?P<art_id>[0-9]+)/delete_art$', views.delete_art, name='delete_art')
+    url(r'^(?P<art_id>[0-9]+)/delete_art$', views.delete_art, name='delete_art'),
+    url(r'^(?P<art_id>[0-9]+)/like_art$', views.like_art, name='like_art')
 ]
