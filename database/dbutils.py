@@ -11,10 +11,10 @@ class ArtDetail:
         for field in ('id', 'title', 'description', 'file_name', 'year', 'price', 'style', 'artist', 'is_liked'):
             setattr(self, field, kwargs.get(field, None))
 
-def art_tuple_to_art_detail_obj(art_tuple, includes_like_status=False, user_id=None):
+def art_tuple_to_art_detail_obj(art_tuple, includes_like_status=False):
     if includes_like_status:
         return ArtDetail(id=art_tuple[0], title=art_tuple[1], file_name=art_tuple[3], year=art_tuple[4],
-                         style=art_tuple[6], is_liked=bool(art_tuple[9] == user_id))
+                         style=art_tuple[6], is_liked=bool(art_tuple[9]))
 
     return ArtDetail(id=art_tuple[0], title=art_tuple[1], file_name=art_tuple[3], year=art_tuple[4], style=art_tuple[6])
 
@@ -86,12 +86,12 @@ class DbApiInstance():
 
                 sql = """
                 SELECT * 
-                FROM art LEFT JOIN likes ON art.id = likes.art_id
+                FROM art LEFT JOIN likes ON art.id = likes.art_id AND likes.user_id = %s
                 LIMIT %s;
                 """
-                self.cursor.execute(sql, (limit,))
+                self.cursor.execute(sql, (user_id, limit))
                 art_tuples = self.cursor.fetchall()
-                return [art_tuple_to_art_detail_obj(a, includes_like_status=True, user_id=user_id) for a in art_tuples]
+                return [art_tuple_to_art_detail_obj(a, includes_like_status=True) for a in art_tuples]
 
 
             def get_user_art(self, user_id):
