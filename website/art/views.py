@@ -118,3 +118,13 @@ def add_art(request):
     }
 
     return render(request, 'art/add_art.html', context)
+
+
+def delete_art(request, art_id):
+    with DbApiInstance() as dbapi:
+        art = dbapi.get_art_by_id(art_id)
+        fs = FileSystemStorage()
+        fs.delete(art.file_name)
+        dbapi.delete_art(art_id)
+    return redirect('/art/user_art')
+

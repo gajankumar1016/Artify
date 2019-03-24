@@ -99,6 +99,11 @@ class DbApiInstance():
                 art = self.cursor.fetchone()
                 return art_tuple_to_art_detail_obj(art)
 
+            def delete_art(self, art_id):
+                sql = "DELETE FROM art WHERE id = %s"
+                self.cursor.execute(sql, (art_id, ))
+                self.dbconn.commit()
+
 
             def insert_art(self, IMAGES_DIR, title: str, file_name: str, year=None, style=None, owner_id=None):
                 assert(IMAGES_DIR)

@@ -23,6 +23,14 @@
                             <!-- View Details -->
                             <a href="{% url 'art:detail' art.id %}" class="btn btn-primary btn-sm" role="button">View Details</a>
 
+                            <!-- Delete Art -->
+                            <form action="{% url 'art:delete_art' art.id %}" method="post" style="display: inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="art_id" value="{{ art.id }}" />
+                                <button type="submit" class="btn btn-default btn-sm">
+                                    <span class="glyphicon glyphicon-trash"></span>
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </div>
