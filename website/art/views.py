@@ -15,8 +15,9 @@ import uuid
 def index(request):
     if not request.user.is_authenticated:
         return redirect('/art/login_user')
-
+    
     user_id = request.user.id
+            
     with DbApiInstance() as ArtifyDbAPI:
         artworks = ArtifyDbAPI.get_recommended_art(user_id)
 
@@ -42,7 +43,7 @@ def detail(request, art_id):
             art_info = dbapi.get_art_by_id(art_id)
         return render(request, 'art/detail.html', {'art_info':art_info, 'user':user})
 
-
+    
 def register(request):
     form = UserForm(request.POST or None)
     context = {
@@ -52,12 +53,21 @@ def register(request):
         user = form.save(commit=False)
         username = form.cleaned_data['username']
         password = form.cleaned_data['password']
+        age = form.cleaned_data['age']
+        gender = form.cleaned_data['gender']
+        location = form.cleaned_data['location']
+        subject_str = ""
+        style_str = ""
+        for item in form.cleaned_data['subject']:
+            subject_str += item
+        for item in form.cleaned_data['style']:
+            style_str += item
         print(username, password)
         user.set_password(password)
         user.save()
         # Also need to add user to our user table; could add extra fields that may not be in auth_user table
         with DbApiInstance() as ArtifyDbAPI:
-            ArtifyDbAPI.insert_user(username=username, password_hash=password)
+            ArtifyDbAPI.insert_user(username=username, password_hash=password, age=age, gender=gender, location=location, subject=subject_str, style=style_str)
 
         user = authenticate(username=username, password=password)
         if user is not None:
@@ -148,5 +158,4 @@ def like_art(request, art_id):
     # TODO: return JsonResponse instead and implement javascript so whole page doesn't scroll
     # return JsonResponse({'success': True})
     return redirect('/art/')
-
 

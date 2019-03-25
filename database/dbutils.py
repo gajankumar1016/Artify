@@ -33,12 +33,12 @@ class DbApiInstance():
                 self.cursor = self.dbconn.cursor(buffered=True)
 
 
-            def insert_user(self, username: str, password_hash: str, age=None, gender=None):
+            def insert_user(self, username: str, password_hash: str, age=None, gender=None, location=None, subject=None, style=None):
                 assert(username)
                 assert(password_hash)
 
-                fields = ['username', 'password_hash']
-                vals = [username, password_hash]
+                fields = ['username', 'password_hash', 'location', 'subject', 'style']
+                vals = [username, password_hash, location, subject, style]
                 if age:
                     fields.append('age')
                     vals.append(age)

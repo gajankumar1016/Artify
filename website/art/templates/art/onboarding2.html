@@ -1,0 +1,44 @@
+{% extends 'art/base.html' %}
+
+{% block body %}
+
+<div class="art-container container-fluid">
+
+    <!-- Art -->
+    <div class="row">
+        <div class="col-sm-12">
+            <h2>Artwork Preferences</h2>
+ <h3>Please Select Some Paintings You Like</h3>    <form action="postonboarding/" method= "POST">   </div>
+   {% if artworks %}
+            {% for art in artworks %}
+                <div class="col-sm-4 col-lg-2">
+                    <div class="thumbnail">
+                        <a href="{% url 'art:detail' art.id %}">
+                            <img src="../../media/{{art.file_name}}" class="img-responsive">
+                        </a>
+                        <div class="caption">
+                            <h2>{{ art.title }}</h2>
+                            <h4>{{ art.artist }}</h4>
+
+                            <!-- View Details -->
+                            <a href="{% url 'art:detail' art.id %}" class="btn btn-primary btn-sm" role="button">View Details</a>
+
+ <!-- Favorite Album -->
+ <input type="checkbox" name="checks" id="option{{art.id}}" value="{{art.id}}"/>
+
+
+                        </div>
+                    </div>
+                </div>
+                {% cycle '' '' '' '' '' '<div class="clearfix visible-lg"></div>' %}
+            {% endfor %}
+
+
+       {% else %}
+            <div class="col-sm-12">
+                <br>
+              </div>
+        {% endif %}
+    </div>
+</div> 
+<br> <p>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <input type="submit" value="Continue To Home Page"> </form> {% endblock %} 
