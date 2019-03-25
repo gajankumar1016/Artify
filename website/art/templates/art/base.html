@@ -31,6 +31,7 @@
         <div class="collapse navbar-collapse" id="topNavBar">
             <ul class="nav navbar-nav">
                 <li class="{% block albums_active %}{% endblock %}"><a href="{% url 'art:user_art' %}">My Art</a></li>
+                <li class="{% block profile %}{% endblock %}"><a href="{% url 'art:user_profile' %}">My Profile</a></li>
             </ul>
 
             <ul class="nav navbar-nav navbar-right">

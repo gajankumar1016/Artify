@@ -1,0 +1,19 @@
+{% extends 'art/base.html' %}
+
+{% block body %}
+
+<div class="art-container container-fluid">
+
+    <div class="row">
+        <div class="col-sm-12">
+            <h2>{{ user.username }}'s Profile</h2>
+        </div>
+
+        <div class="col-sm-4 col-lg-2">
+            <h4>Username: {{ user_prof.username }} </h4>
+            <h4>Age: {{ user_prof.age }} </h4>
+            <h4>Gender: {{ user_prof.gender }} </h4>
+            <h4>Location: {{ user_prof.location }} </h4>
+        </div>
+</div>
+{% endblock %}

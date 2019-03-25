@@ -19,6 +19,17 @@ def art_tuple_to_art_detail_obj(art_tuple, includes_like_status=False):
     return ArtDetail(id=art_tuple[0], title=art_tuple[1], file_name=art_tuple[3], year=art_tuple[4], style=art_tuple[6])
 
 
+class UserDetail:
+    def __init__(self, **kwargs):
+        for field in ('username', 'age', 'gender', 'location', 'subject', 'style'):
+            setattr(self, field, kwargs.get(field, None))
+
+def profile_tuple_to_profile_detail_obj(user_tuple):
+    return UserDetail(username=user_tuple[1], age=user_tuple[3], gender=user_tuple[4],
+                          location=user_tuple[5])
+
+
+
 class DbApiInstance():
     def __enter__(self):
         class ArtifyDatabaseAPI:
@@ -70,12 +81,12 @@ class DbApiInstance():
                 return False
 
 
-            def get_user_by_username(self, username):
-                assert(username)
-                sql = "SELECT * FROM user WHERE username=%s"
-                self.cursor.execute(sql, (username,))
+            def get_user_by_user_id(self, user_id):
+                assert(user_id)
+                sql = "SELECT * FROM user WHERE id=%s;"
+                self.cursor.execute(sql, (user_id,))
                 result = self.cursor.fetchone()
-                return result
+                return profile_tuple_to_profile_detail_obj(result)
 
 
             def get_recommended_art(self, user_id, limit=20):
@@ -85,7 +96,7 @@ class DbApiInstance():
                 # TODO: Do a bunch of joins instead and actually make a useful query
 
                 sql = """
-                SELECT * 
+                SELECT *
                 FROM art LEFT JOIN likes ON art.id = likes.art_id AND likes.user_id = %s
                 LIMIT %s;
                 """
@@ -204,13 +215,18 @@ if __name__ == '__main__':
     # Example usage of the Artify Database API
     with DbApiInstance() as artifyDbAPI:
         # TODO: set the demo up smarter so don't have to keep changeing username; could use random usernames
-        artifyDbAPI.insert_user(username="ballislife15", password_hash="abcd123", gender="F", age=80)
+        # artifyDbAPI.insert_user(username="ballislife15", password_hash="abcd123", gender="F", age=80)
 
-        user_exists = artifyDbAPI.user_exists(username="ballislife50")
-        print("User exists? ", user_exists)
+        # user_exists = artifyDbAPI.user_exists(username="ballislife50")
+        # print("User exists? ", user_exists)
 
-        valid_login = artifyDbAPI.verify_username_and_password(username="ballislife3", password_hash="abcd123")
-        print("Valid login? ", valid_login)
+        # valid_login = artifyDbAPI.verify_username_and_password(username="ballislife3", password_hash="abcd123")
+        # print("Valid login? ", valid_login)
+        user_id = 1
 
-        print(artifyDbAPI.execute_sql("SELECT * FROM user", return_type="fetchall"))
+        sql = "SELECT * FROM user WHERE id=%s;"
+        artifyDbAPI.cursor.execute(sql, (user_id,))
+        result = artifyDbAPI.cursor.fetchone()
 
+        # result = artifyDbAPI.execute_sql("SELECT * FROM user WHERE id=1", return_type="fetchall")
+        print(result[0])

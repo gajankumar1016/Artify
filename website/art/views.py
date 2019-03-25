@@ -15,9 +15,9 @@ import uuid
 def index(request):
     if not request.user.is_authenticated:
         return redirect('/art/login_user')
-    
+
     user_id = request.user.id
-            
+
     with DbApiInstance() as ArtifyDbAPI:
         artworks = ArtifyDbAPI.get_recommended_art(user_id)
 
@@ -34,6 +34,19 @@ def user_art(request):
     return render(request, 'art/user_art.html', {'artworks': artworks})
 
 
+def user_profile(request):
+    if not request.user.is_authenticated:
+        return redirect('/art/login_user')
+
+    user_id = request.user.id
+    with DbApiInstance() as ArtifyDbAPI:
+        # print("User id is " + str(user_id))
+        user_prof = ArtifyDbAPI.get_user_by_user_id(user_id)
+        print(user_prof)
+
+    return render(request, 'art/user_profile.html', {'user_prof':user_prof})
+
+
 def detail(request, art_id):
     if not request.user.is_authenticated:
         return redirect('/art/login_user')
@@ -41,9 +54,10 @@ def detail(request, art_id):
         user = request.user
         with DbApiInstance() as dbapi:
             art_info = dbapi.get_art_by_id(art_id)
+        # return render(request, 'art/detail.html', {'art_info':art_info})
         return render(request, 'art/detail.html', {'art_info':art_info, 'user':user})
 
-    
+
 def register(request):
     form = UserForm(request.POST or None)
     context = {
@@ -158,4 +172,3 @@ def like_art(request, art_id):
     # TODO: return JsonResponse instead and implement javascript so whole page doesn't scroll
     # return JsonResponse({'success': True})
     return redirect('/art/')
-
