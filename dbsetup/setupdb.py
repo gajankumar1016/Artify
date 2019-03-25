@@ -49,7 +49,9 @@ username VARCHAR(64) NOT NULL UNIQUE,
 password_hash VARCHAR(256) NOT NULL,
 age INT,
 gender VARCHAR(16),
-location VARCHAR(64)
+location VARCHAR(64),
+subject VARCHAR(64),
+style VARCHAR(64)
 );"""
 mycursor.execute(create_user)
 ######################################################################
