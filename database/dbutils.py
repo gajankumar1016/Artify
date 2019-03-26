@@ -25,7 +25,7 @@ class UserDetail:
             setattr(self, field, kwargs.get(field, None))
 
 def profile_tuple_to_profile_detail_obj(user_tuple):
-    return UserDetail(username=user_tuple[1], age=user_tuple[3], gender=user_tuple[4],
+    return UserDetail(username=user_tuple[1], age=user_tuple[3], gender="M" if user_tuple[4] else "F",
                           location=user_tuple[5])
 
 
@@ -58,6 +58,24 @@ class DbApiInstance():
                     vals.append(gender)
 
                 sql = "INSERT INTO user (" + ','.join(fields) +") VALUES (" + ','.join(["%s"] * len(fields)) + ");"
+
+                self.cursor.execute(sql, vals)
+                self.dbconn.commit()
+
+
+            def edit_user(self, id, age, gender, location):
+                assert(id)
+
+                fields = ['age', 'gender', 'location']
+                vals = [age, gender, location]
+
+                sql = "UPDATE user SET "
+
+                for i in range(len(fields)):
+                    sql += fields[i] + "=%s,"
+
+                sql = sql[:len(sql) - 1]
+                sql += " WHERE id=" + str(id)
 
                 self.cursor.execute(sql, vals)
                 self.dbconn.commit()

@@ -5,7 +5,7 @@ sys.path.insert(0, '../../database')
 from database.dbutils import DbApiInstance
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
-from .forms import UserForm, ArtForm
+from .forms import UserForm, ArtForm, EditForm
 from django.contrib.auth import authenticate, login, logout
 from django.core.files.storage import FileSystemStorage
 import uuid
@@ -113,6 +113,31 @@ def login_user(request):
 def logout_user(request):
     logout(request)
     return redirect('/art/login_user')
+
+
+def edit_user(request):
+    form = EditForm(request.POST or None)
+    context = {
+        "form": form,
+    }
+    if form.is_valid():
+        user = form.save(commit=False)
+        # username = form.cleaned_data['username']
+        # password = form.cleaned_data['password']
+        age = form.cleaned_data['age']
+        gender = form.cleaned_data['gender']
+        location = form.cleaned_data['location']
+
+        user_id = request.user.id
+
+        with DbApiInstance() as ArtifyDbAPI:
+            ArtifyDbAPI.edit_user(id=user_id, age=age, gender=gender, location=location)
+
+        return redirect('/art/user_profile')
+
+    return render(request, 'art/user_edit.html', context)
+
+
 
 def add_art(request):
     if not request.user.is_authenticated:
