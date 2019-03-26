@@ -40,9 +40,7 @@ def user_profile(request):
 
     user_id = request.user.id
     with DbApiInstance() as ArtifyDbAPI:
-        # print("User id is " + str(user_id))
         user_prof = ArtifyDbAPI.get_user_by_user_id(user_id)
-        print(user_prof)
 
     return render(request, 'art/user_profile.html', {'user_prof':user_prof})
 
@@ -116,19 +114,22 @@ def logout_user(request):
 
 
 def edit_user(request):
-    form = EditForm(request.POST or None)
+    user_id = request.user.id
+
+    with DbApiInstance() as ArtifyDbAPI:
+        user_prof = ArtifyDbAPI.get_user_by_user_id(user_id)
+
+
+    form = EditForm(request.POST or None, initial={'age':user_prof.age,'gender': '1' if user_prof.gender == "M" else '2','location':user_prof.location})
     context = {
         "form": form,
     }
     if form.is_valid():
         user = form.save(commit=False)
-        # username = form.cleaned_data['username']
-        # password = form.cleaned_data['password']
+
         age = form.cleaned_data['age']
         gender = form.cleaned_data['gender']
         location = form.cleaned_data['location']
-
-        user_id = request.user.id
 
         with DbApiInstance() as ArtifyDbAPI:
             ArtifyDbAPI.edit_user(id=user_id, age=age, gender=gender, location=location)
