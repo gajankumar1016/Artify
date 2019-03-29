@@ -5,6 +5,7 @@ sys.path.insert(0, "../similarity_model")
 from similarity_model import cos_sim
 import mysql.connector
 from .secrets import dbpassword
+import subprocess
 
 class ArtDetail:
     def __init__(self, **kwargs):
@@ -185,10 +186,17 @@ class DbApiInstance():
                 self.dbconn.commit()
 
                 # May want to create separate processes to handle similarity computation
-                self._compute_similarities(IMAGES_DIR=IMAGES_DIR, base_id=self.cursor.lastrowid, base_img_fname=file_name)
+                #self.compute_similarities(IMAGES_DIR=IMAGES_DIR, base_id=self.cursor.lastrowid, base_img_fname=file_name)
+
+                path = os.path.abspath(__file__)
+                dirname = os.path.dirname(path)
+                script_path = os.path.join(dirname, 'compute_simscore.py')
+                cmd_str = "python {} {} {} {}".format(script_path, IMAGES_DIR, self.cursor.lastrowid, str(file_name))
+
+                proc = subprocess.Popen([cmd_str], shell=True, stdin=None, stdout=None, stderr=None, close_fds=True)
 
 
-            def _compute_similarities(self, IMAGES_DIR, base_id, base_img_fname):
+            def compute_similarities(self, IMAGES_DIR, base_id, base_img_fname):
                 base_img_path = os.path.join(IMAGES_DIR, base_img_fname)
                 sql = "SELECT id, file_name FROM art WHERE id <> {}".format(base_id)
                 self.cursor.execute(sql)
