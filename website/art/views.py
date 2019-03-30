@@ -149,7 +149,10 @@ def add_art(request):
         title = form.cleaned_data['title']
         style = form.cleaned_data['style']
         year = form.cleaned_data['year']
+        artist = form.cleaned_data['artist']
         user_id = request.user.id
+
+        # TODO: make sure file has valid file extension
         file = request.FILES['art_image']
         fs = FileSystemStorage()
         file_ext = file.name.split('.')[-1]
@@ -159,8 +162,12 @@ def add_art(request):
         print(fname)
 
         with DbApiInstance() as artifyDbAPI:
+            artist_obj = artifyDbAPI.get_artist_by_name(name=artist)
+            if not artist_obj:
+                artist_obj = artifyDbAPI.insert_artist(name=artist)
+
             artifyDbAPI.insert_art(IMAGES_DIR="./media", title=title, file_name=fname, year=year, style=style,
-                                   owner_id=user_id)
+                                   owner_id=user_id, artist_id=artist_obj.id)
 
         return redirect('/art/user_art')
 
