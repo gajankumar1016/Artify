@@ -12,12 +12,22 @@ class ArtDetail:
         for field in ('id', 'title', 'description', 'file_name', 'year', 'price', 'style', 'artist', 'is_liked'):
             setattr(self, field, kwargs.get(field, None))
 
-def art_tuple_to_art_detail_obj(art_tuple, includes_like_status=False):
-    if includes_like_status:
+def art_tuple_to_art_detail_obj(art_tuple, joined=False):
+    if joined:
         return ArtDetail(id=art_tuple[0], title=art_tuple[1], file_name=art_tuple[3], year=art_tuple[4],
-                         style=art_tuple[6], is_liked=bool(art_tuple[9]))
+                         style=art_tuple[6], is_liked=bool(art_tuple[9]), artist=art_tuple[12])
 
     return ArtDetail(id=art_tuple[0], title=art_tuple[1], file_name=art_tuple[3], year=art_tuple[4], style=art_tuple[6])
+
+
+class ArtistDetail:
+    def __init__(self, **kwargs):
+        for field in ('id', 'name', 'gender'):
+            setattr(self, field, kwargs.get(field, None))
+
+
+def artist_tuple_to_artist_detail_obj(artist_tuple):
+    return ArtistDetail(id=artist_tuple[0], name=artist_tuple[1], gender=artist_tuple[2])
 
 
 class UserDetail:
@@ -117,25 +127,37 @@ class DbApiInstance():
                 sql = """
                 SELECT *
                 FROM art LEFT JOIN likes ON art.id = likes.art_id AND likes.user_id = %s
+                JOIN artist ON art.artist_id = artist.id
                 LIMIT %s;
                 """
                 self.cursor.execute(sql, (user_id, limit))
                 art_tuples = self.cursor.fetchall()
-                return [art_tuple_to_art_detail_obj(a, includes_like_status=True) for a in art_tuples]
+                return [art_tuple_to_art_detail_obj(a, joined=True) for a in art_tuples]
 
 
             def get_user_art(self, user_id):
                 sql = "SELECT * FROM art WHERE owner_id = %s"
-                self.cursor.execute(sql, (user_id,))
+                sql = """
+                SELECT *
+                FROM art LEFT JOIN likes ON art.id = likes.art_id AND likes.user_id = %s
+                JOIN artist ON art.artist_id = artist.id
+                WHERE owner_id = %s"""
+
+                self.cursor.execute(sql, (user_id, user_id))
                 art_tuples = self.cursor.fetchall()
-                return [art_tuple_to_art_detail_obj(a) for a in art_tuples]
+                return [art_tuple_to_art_detail_obj(a, joined=True) for a in art_tuples]
 
 
             def get_art_by_id(self, artid):
-                sql = "SELECT * FROM art LEFT JOIN likes ON art.id = likes.art_id WHERE art.id = %s;"
+                sql = """
+                SELECT * 
+                FROM art 
+                LEFT JOIN likes ON art.id = likes.art_id 
+                JOIN artist ON art.artist_id = artist.id 
+                WHERE art.id = %s;"""
                 self.cursor.execute(sql, (artid,))
                 art = self.cursor.fetchone()
-                return art_tuple_to_art_detail_obj(art, includes_like_status=True)
+                return art_tuple_to_art_detail_obj(art, joined=True)
 
 
             def delete_art(self, art_id):
@@ -163,22 +185,39 @@ class DbApiInstance():
                 self.dbconn.commit()
 
 
-            def insert_art(self, IMAGES_DIR, title: str, file_name: str, year=None, style=None, owner_id=None):
+            def insert_artist(self, name:str, gender = None):
+                fields = ['name', 'gender']
+                vals = [name, gender]
+                sql = "INSERT INTO artist (" + ','.join(fields) + ") VALUES (" + ','.join(["%s"] * len(fields)) + ");"
+                self.cursor.execute(sql, vals)
+                self.dbconn.commit()
+                return self.get_artist_by_id(self.cursor.lastrowid)
+
+            def get_artist_by_id(self, id):
+                sql = "SELECT * FROM artist WHERE id = %s;"
+                self.cursor.execute(sql, (id,))
+                artist = self.cursor.fetchone()
+                if not artist:
+                    return None
+                return artist_tuple_to_artist_detail_obj(artist)
+
+
+            def get_artist_by_name(self, name):
+                sql = "SELECT * FROM artist WHERE name = %s;"
+                self.cursor.execute(sql, (name,))
+                artist = self.cursor.fetchone()
+                if not artist:
+                    return None
+                return artist_tuple_to_artist_detail_obj(artist)
+
+
+            def insert_art(self, IMAGES_DIR, title: str, file_name: str, year=None, style=None, artist_id = None, owner_id=None):
                 assert(IMAGES_DIR)
                 assert(title)
                 assert(file_name)
 
-                fields = ['title', 'file_name']
-                vals = [title, file_name]
-                if year:
-                    fields.append('year')
-                    vals.append(year)
-                if style:
-                    fields.append('style')
-                    vals.append(style)
-                if owner_id:
-                    fields.append('owner_id')
-                    vals.append(owner_id)
+                fields = ['title', 'file_name', 'year', 'style', 'artist_id', 'owner_id']
+                vals = [title, file_name, year, style, artist_id, owner_id]
 
                 sql = "INSERT INTO art (" + ','.join(fields) +") VALUES (" + ','.join(["%s"] * len(fields)) + ");"
 
@@ -234,25 +273,3 @@ class DbApiInstance():
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.database_api.cursor.close()
         self.database_api.dbconn.close()
-
-
-
-if __name__ == '__main__':
-    # Example usage of the Artify Database API
-    with DbApiInstance() as artifyDbAPI:
-        # TODO: set the demo up smarter so don't have to keep changeing username; could use random usernames
-        # artifyDbAPI.insert_user(username="ballislife15", password_hash="abcd123", gender="F", age=80)
-
-        # user_exists = artifyDbAPI.user_exists(username="ballislife50")
-        # print("User exists? ", user_exists)
-
-        # valid_login = artifyDbAPI.verify_username_and_password(username="ballislife3", password_hash="abcd123")
-        # print("Valid login? ", valid_login)
-        user_id = 1
-
-        sql = "SELECT * FROM user WHERE id=%s;"
-        artifyDbAPI.cursor.execute(sql, (user_id,))
-        result = artifyDbAPI.cursor.fetchone()
-
-        # result = artifyDbAPI.execute_sql("SELECT * FROM user WHERE id=1", return_type="fetchall")
-        print(result[0])

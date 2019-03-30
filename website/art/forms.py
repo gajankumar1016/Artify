@@ -7,6 +7,7 @@ class ArtForm(forms.Form):
     title = forms.CharField(max_length=128)
     style = forms.CharField(max_length=64)
     year = forms.IntegerField()
+    artist = forms.CharField(max_length=64)
     art_image = forms.ImageField()
 
 

@@ -158,4 +158,9 @@ df = pd.read_csv('./artinfo.csv', sep="|")
 
 with DbApiInstance() as artifyDbAPI:
     for index, row in df.iterrows():
-        artifyDbAPI.insert_art(IMAGES_DIR="../devimages", title=row["Title"], file_name=row["FileName"], year=row["Year"], style=row["Style"])
+        artist = artifyDbAPI.get_artist_by_name(row["Artist"])
+        if not artist:
+            artist = artifyDbAPI.insert_artist(row["Artist"])
+
+        artifyDbAPI.insert_art(IMAGES_DIR="../devimages", title=row["Title"], file_name=row["FileName"],
+                               year=row["Year"], style=row["Style"], artist_id=artist.id)
