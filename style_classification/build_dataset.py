@@ -3,11 +3,12 @@
 import os
 import shutil
 import random
+import argparse
 
 from PIL import Image
 from tqdm import tqdm
 
-SIZE = 64
+SIZE = 256 
 
 def resize_and_save(filename, output_dir, size=SIZE):
     """Resize the image contained in `filename` and save it to the `output_dir`"""
@@ -74,7 +75,11 @@ def build_dataset(images_per_class=None):
 
 
 if __name__ == '__main__':
-    build_dataset(20)
+    ap = argparse.ArgumentParser()
+    ap.add_argument("-n", "--size", type=int, required=True,
+            help="Images to be considered for each class")
+    args = vars(ap.parse_args())
+    build_dataset(args["size"])
     print("Done building dataset")
 
 
