@@ -159,6 +159,33 @@ class DbApiInstance():
                 art = self.cursor.fetchone()
                 return art_tuple_to_art_detail_obj(art, joined=True)
 
+            #Pass in a list of conditions (eg:["condA", "condB"])
+            #Note: Natural join for now
+            def get_art_by_cond(self, conds):
+                sql = "SELECT * FROM art NATURAL JOIN artist WHERE "
+                for i in range(len(conds)):
+                    if len(conds)>1:
+                        sql += '('
+                    sql += conds[i]
+                    if len(conds)>1:
+                        sql += ')'
+                    if i < len(conds) - 1:
+                        sql += ' AND '
+                sql += ';'
+                if len(conds) == 0:
+                    sql = "SELECT * FROM art NATURAL JOIN artist;"
+                self.cursor.execute(sql)
+                art_tuples = self.cursor.fetchall()
+                return [art_tuple_to_art_detail_obj(a) for a in art_tuples]
+
+            #Gets unique styles for search options
+            def get_unique_styles(self):
+                sql = "SELECT DISTINCT style FROM art;"
+                self.cursor.execute(sql)
+                styles_tuples = self.cursor.fetchall()
+                if not styles_tuples:
+                    return None
+                return styles_tuples
 
             def delete_art(self, art_id):
                 sql = "DELETE FROM art WHERE id = %s;"
@@ -200,6 +227,15 @@ class DbApiInstance():
                 if not artist:
                     return None
                 return artist_tuple_to_artist_detail_obj(artist)
+
+            #Get all artists for search options 
+            def get_all_artists(self):
+                sql = "SELECT * FROM artist ORDER BY name;"
+                self.cursor.execute(sql)
+                artists = self.cursor.fetchall()
+                if not artists:
+                    return None
+                return [artist_tuple_to_artist_detail_obj(artist) for artist in artists]
 
 
             def get_artist_by_name(self, name):
