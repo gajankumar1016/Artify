@@ -229,7 +229,7 @@ def search(request):
         #4.Substring/Exact match
         #5.Take best of all 4
 
-        if query != '':
+        if query != '' and query is not None:
             #Step 1
             query = query.lower()
             porter = PorterStemmer()
@@ -304,7 +304,8 @@ def search(request):
                 if include_this_piece == True:
                     filtered_artworks.append(art)
                     
-        #file.close()
+        else:
+            filtered_artworks = artworks
         return render(request, 'art/searchResult.html', {'artworks':filtered_artworks})
     
     return render(request, 'art/search.html', context)
