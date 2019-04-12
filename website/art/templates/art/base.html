@@ -35,6 +35,11 @@
             </ul>
 
             <ul class="nav navbar-nav navbar-right">
+		<li>
+                    <a href="{% url 'art:search' %}">
+                     <span class="glyphicon glyphicon-search" aria-hidden="true"></span>&nbsp; Search   
+                    </a>
+                </li>
                 <li>
                     <a href="{% url 'art:add_art' %}">
                         <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>&nbsp; Add Art
