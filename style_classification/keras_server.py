@@ -14,7 +14,7 @@ import io
 
 # Create Flask application and initialize Keras model
 app = flask.Flask(__name__)
-app = CORS(app)
+CORS(app)
 model = None
 
 style_to_idx = {'Impressionism': 12, 'Romanticism': 23, 'Baroque': 4, 'Rococo': 22, 'Pop_Art': 19,

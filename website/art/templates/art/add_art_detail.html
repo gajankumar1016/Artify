@@ -9,7 +9,7 @@
         <div class="col-sm-12 col-md-7">
             <div class="panel panel-default">
                 <div class="panel-body">
-                    <h3>Upload Art</h3>
+                    <h3>Add a new Art Piece</h3>
                     {% if error_message %}
                         <p><strong>{{ error_message }}</strong></p>
                     {% endif %}
@@ -22,6 +22,9 @@
                             </div>
                         </div>
                     </form>
+                    <img src="/../../media/{{file_name}}" class="img-responsive">
+
+
                 </div>
             </div>
         </div>

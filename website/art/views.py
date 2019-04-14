@@ -5,10 +5,13 @@ sys.path.insert(0, '../../database')
 from database.dbutils import DbApiInstance
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
-from .forms import UserForm, ArtForm, EditForm
+from .forms import UserForm, EditForm, ArtUploadForm, ArtDetailForm
 from django.contrib.auth import authenticate, login, logout
 from django.core.files.storage import FileSystemStorage
+from django.conf import settings
 import uuid
+import requests
+import os
 
 # Create your views here.
 
@@ -139,27 +142,72 @@ def edit_user(request):
     return render(request, 'art/user_edit.html', context)
 
 
-
 def add_art(request):
     if not request.user.is_authenticated:
         return redirect('/art/login_user')
 
-    form = ArtForm(request.POST or None, request.FILES or None)
+    form = ArtUploadForm(request.POST or None, request.FILES or None)
     if form.is_valid():
-        title = form.cleaned_data['title']
-        style = form.cleaned_data['style']
-        year = form.cleaned_data['year']
-        artist = form.cleaned_data['artist']
-        user_id = request.user.id
-
         # TODO: make sure file has valid file extension
         file = request.FILES['art_image']
         fs = FileSystemStorage()
         file_ext = file.name.split('.')[-1]
         print(file_ext)
-        unique_fname = str(uuid.uuid4()) + '.' + file_ext
+        unique_fname_no_ext = str(uuid.uuid4())
+        unique_fname = unique_fname_no_ext + '.' + file_ext
         fname = fs.save(unique_fname, file)
         print(fname)
+
+        return redirect('/art/add_art_detail/' + unique_fname_no_ext + '/ext/' + file_ext)
+
+    context = {
+        "form": form,
+    }
+
+    return render(request, 'art/add_art.html', context)
+
+
+def add_art_detail(request, fname, ext):
+    if not request.user.is_authenticated:
+        return redirect('/art/login_user')
+
+    def get_most_likely_style(img_path):
+        URL = "http://localhost:5000/predict"
+
+        image = open(img_path, "rb").read()
+        payload = {"image": image}
+
+        # make request to the API
+        request = requests.post(URL, files=payload).json()
+
+        max_prob = 0
+        most_likely_style = None
+        if request["success"]:
+            # Print formatted Result
+            print("% s % 15s % s" % ("Rank", "Label", "Probability"))
+            for (i, result) in enumerate(request["predictions"]):
+                label = result["label"]
+                prob = result["probability"]
+                print("% d. % 17s %.4f" % (i + 1, label, prob))
+
+                if prob > max_prob:
+                    max_prob = prob
+                    most_likely_style = label
+        return most_likely_style
+
+
+    fname = fname + "." + ext
+    form = ArtDetailForm(request.POST or None)
+    if form.is_valid():
+        title = form.cleaned_data['title']
+        style = form.cleaned_data['style']
+        other_style = form.cleaned_data['other_style']
+        year = form.cleaned_data['year']
+        artist = form.cleaned_data['artist']
+        user_id = request.user.id
+
+        if other_style:
+            style = other_style
 
         with DbApiInstance() as artifyDbAPI:
             artist_obj = artifyDbAPI.get_artist_by_name(name=artist)
@@ -171,11 +219,22 @@ def add_art(request):
 
         return redirect('/art/user_art')
 
+
+    print("Initial style", form.fields["style"].initial)
+    try:
+        most_likely_style = get_most_likely_style(os.path.join(settings.MEDIA_ROOT, fname))
+        print("Most likely style: ", most_likely_style)
+        form.fields["style"].initial = most_likely_style
+    except Exception as e:
+        print(e)
+        print("Could not get most likely style. Make sure server is up")
+
     context = {
         "form": form,
+        "file_name": fname
     }
 
-    return render(request, 'art/add_art.html', context)
+    return render(request, 'art/add_art_detail.html', context)
 
 
 def delete_art(request, art_id):
@@ -189,6 +248,7 @@ def delete_art(request, art_id):
         fs.delete(art.file_name)
         dbapi.delete_art(art_id)
     return redirect('/art/user_art')
+
 
 def like_art(request, art_id):
     if not request.user.is_authenticated:
