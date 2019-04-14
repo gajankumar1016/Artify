@@ -5,15 +5,11 @@ from datetime import datetime
 
 
 # TODO: align max lengths with database constraints
-style_to_idx = {'Impressionism': 12, 'Romanticism': 23, 'Baroque': 4, 'Rococo': 22, 'Pop_Art': 19,
-                'Early_Renaissance': 8, 'Color_Field_Painting': 5, 'Contemporary_Realism': 6, 'Pointillism': 18,
-                'Abstract_Expressionism': 0, 'Minimalism': 14, 'Art_Nouveau_Modern': 3, 'Symbolism': 24,
-                'Mannerism_Late_Renaissance': 13, 'Analytical_Cubism': 2, 'Expressionism': 9, 'Fauvism': 10,
-                'Synthetic_Cubism': 25, 'Ukiyo_e': 26, 'New_Realism': 16, 'Northern_Renaissance': 17, 'Realism': 21,
-                'Cubism': 7, 'Action_painting': 1, 'High_Renaissance': 11, 'Post_Impressionism': 20,
-                'Naive_Art_Primitivism': 15}
+style_to_idx = {'Romanticism': 11, 'Northern_Renaissance': 7, 'Abstract_Expressionism': 0, 'Cubism': 3,
+                'Naive_Art_Primitivism': 6, 'Realism': 9, 'Post_Impressionism': 8, 'Art_Nouveau_Modern': 1,
+                'Rococo': 10, 'Impressionism': 5, 'Symbolism': 12, 'Expressionism': 4, 'Baroque': 2}
 
-style_choices = [(style, style) for i, style in enumerate(style_to_idx.keys())]
+style_choices = [(style, style) for style in style_to_idx.keys()]
 
 class ArtUploadForm(forms.Form):
     art_image = forms.ImageField()

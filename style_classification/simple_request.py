@@ -7,7 +7,8 @@ Inspired by https://www.geeksforgeeks.org/exposing-ml-dl-models-as-rest-apis/
 import requests
 import sys
 
-URL = "http://localhost:5000/predict"
+# URL = "http://localhost:5000/predict"
+URL = "https://35.202.65.180:5000/predict"
 
 # provide image name as command line argument
 IMAGE_PATH = sys.argv[1]

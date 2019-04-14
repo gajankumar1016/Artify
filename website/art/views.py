@@ -173,6 +173,7 @@ def add_art_detail(request, fname, ext):
 
     def get_most_likely_style(img_path):
         URL = "http://localhost:5000/predict"
+        # URL = "http://35.232.171.112/predict"
 
         image = open(img_path, "rb").read()
         payload = {"image": image}
