@@ -41,9 +41,19 @@ def build_dataset(images_per_class=None):
         filenames = [os.path.join(curr_dir, f) for f in filenames if f.endswith('.jpg')]
         print("{}: {}".format(curr_dir, len(filenames))) 
 
+    print("--------------------Creating train, dev, and test dirs--------------------")
+
+
+    for subdir in subdirs:
+        curr_dir = os.path.join(WIKIART_PATH, subdir)
+        filenames = os.listdir(curr_dir)
+        filenames = [os.path.join(curr_dir, f) for f in filenames if f.endswith('.jpg')]
+        print("{}: {}".format(curr_dir, len(filenames))) 
+
         if images_per_class:
             if len(filenames) < images_per_class:
                 print("Skipping {}".format(subdir))
+                continue
 
         filenames.sort()
         random.shuffle(filenames)
@@ -52,8 +62,8 @@ def build_dataset(images_per_class=None):
         if images_per_class:
             max_available = images_per_class
 
-        train_split = int(0.7 * max_available)
-        dev_split = int(0.9 * max_available)
+        train_split = int(0.9 * max_available)
+        dev_split = int(0.95 * max_available)
         train_filenames = filenames[:train_split]
         dev_filenames = filenames[train_split:dev_split]
         test_filenames = filenames[dev_split:max_available]
