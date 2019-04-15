@@ -2,9 +2,22 @@ from django import forms
 from django.contrib.auth.models import User
 from django.core.validators import  MaxValueValidator
 from datetime import datetime
-
+import sys
+sys.path.insert(0, '../')
+sys.path.insert(0, '../../')
+sys.path.insert(0, '../../database')
+from database.dbutils import DbApiInstance
+from django.http import JsonResponse
+from django.core.files.storage import FileSystemStorage
+import uuid
 
 # TODO: align max lengths with database constraints
+
+artistobjs = []
+with DbApiInstance() as ArtifyDbAPI:
+    artistobjs = ArtifyDbAPI.get_all_artists()
+    style_tuples = ArtifyDbAPI.get_unique_styles()
+
 style_to_idx = {'Romanticism': 11, 'Northern_Renaissance': 7, 'Abstract_Expressionism': 0, 'Cubism': 3,
                 'Naive_Art_Primitivism': 6, 'Realism': 9, 'Post_Impressionism': 8, 'Art_Nouveau_Modern': 1,
                 'Rococo': 10, 'Impressionism': 5, 'Symbolism': 12, 'Expressionism': 4, 'Baroque': 2}
@@ -32,7 +45,7 @@ class EditForm(forms.ModelForm):
         model = User
         fields = ['age', 'gender','location']
 
-
+#Form for user registration info
 class UserForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput)
     age = forms.CharField()
@@ -45,3 +58,17 @@ class UserForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ['username', 'password', 'age', 'gender','location', 'subject', 'style']
+
+#Form for search parameters
+class SearchForm(forms.Form):
+    query = forms.CharField(label="Artwork Name", required=False)
+    min_price = forms.IntegerField(required=False, label="Minimum Price")
+    max_price = forms.IntegerField(required=False, label="Maximum Price")
+    min_year = forms.IntegerField(required=False, label="Earliest Year")
+    max_year = forms.IntegerField(required=False, label="Latest Year")
+    artist = forms.MultipleChoiceField(choices = [(artistobjs[i].name,artistobjs[i].name) for i in range(len(artistobjs))],required=False, label="Artist", widget=forms.CheckboxSelectMultiple)
+    style = forms.MultipleChoiceField(required=False, label = "Art Style", choices = [(style_tuples[i][0], style_tuples[i][0]) for i in range(len(style_tuples))], widget=forms.CheckboxSelectMultiple)
+    
+    #subject = forms.MultipleChoiceField(required=False, label = "Art Subject", choices = [('Portraits', 'Portraits'), ('Landscapes', 'Landscapes'), ('Wildlife', 'Wildlife'), ('Botanical Art', 'Botanical Art'), ('Still Life', 'Still Life'), ('Symbolic','Symbolic')], widget=forms.CheckboxSelectMultiple)
+   
+    

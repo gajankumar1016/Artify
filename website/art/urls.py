@@ -10,6 +10,7 @@ urlpatterns = [
     url(r'^register/$', views.register, name='register'),
     url(r'^login_user/$', views.login_user, name='login_user'),
     url(r'^logout_user$', views.logout_user, name='logout_user'),
+    url(r'^search$', views.search, name='search'),
     url(r'^add_art$', views.add_art, name='add_art'),
     url(r'^add_art_detail/(?P<fname>[\w\-]+)/ext/(?P<ext>[\w\-]+)/$', views.add_art_detail, name='add_art_detail'),
     url(r'^edit_user$', views.edit_user, name='edit_user'),
