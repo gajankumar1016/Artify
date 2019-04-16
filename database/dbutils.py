@@ -2,20 +2,35 @@ import sys
 import os
 sys.path.insert(0, "..")
 sys.path.insert(0, "../similarity_model")
-from similarity_model import cos_sim
 import mysql.connector
 from .secrets import dbpassword
-import subprocess
+# import subprocess
+# from similarity_model import cos_sim
+
 
 class ArtDetail:
+    fields = ('id', 'title', 'description', 'file_name', 'year', 'price', 'style', 'artist', 'is_liked')
+
     def __init__(self, **kwargs):
-        for field in ('id', 'title', 'description', 'file_name', 'year', 'price', 'style', 'artist', 'is_liked'):
+        for field in self.fields:
             setattr(self, field, kwargs.get(field, None))
 
-def art_tuple_to_art_detail_obj(art_tuple, joined=False):
-    if joined:
+    def __repr__(self):
+        repr_str = "<"
+        for field in self.fields:
+            repr_str += " |{}: {}| ".format(field, str(getattr(self, field)))
+        return repr_str + ">"
+
+
+def art_tuple_to_art_detail_obj(art_tuple, art_join_like_join_artist=False, art_join_artist=False):
+    if art_join_like_join_artist:
         return ArtDetail(id=art_tuple[0], title=art_tuple[1], file_name=art_tuple[3], year=art_tuple[4],
                          style=art_tuple[6], is_liked=bool(art_tuple[9]), artist=art_tuple[12])
+    elif art_join_artist:
+        foo = ArtDetail(id=art_tuple[0], title=art_tuple[1], file_name=art_tuple[3], year=art_tuple[4],
+                         style=art_tuple[6], artist=art_tuple[9])
+        print(foo)
+        return foo
 
     return ArtDetail(id=art_tuple[0], title=art_tuple[1], file_name=art_tuple[3], year=art_tuple[4], style=art_tuple[6])
 
@@ -132,7 +147,7 @@ class DbApiInstance():
                 """
                 self.cursor.execute(sql, (user_id, limit))
                 art_tuples = self.cursor.fetchall()
-                return [art_tuple_to_art_detail_obj(a, joined=True) for a in art_tuples]
+                return [art_tuple_to_art_detail_obj(a, art_join_like_join_artist=True) for a in art_tuples]
 
 
             def get_user_art(self, user_id):
@@ -145,7 +160,7 @@ class DbApiInstance():
 
                 self.cursor.execute(sql, (user_id, user_id))
                 art_tuples = self.cursor.fetchall()
-                return [art_tuple_to_art_detail_obj(a, joined=True) for a in art_tuples]
+                return [art_tuple_to_art_detail_obj(a, art_join_like_join_artist=True) for a in art_tuples]
 
 
             def get_art_by_id(self, artid):
@@ -157,7 +172,7 @@ class DbApiInstance():
                 WHERE art.id = %s;"""
                 self.cursor.execute(sql, (artid,))
                 art = self.cursor.fetchone()
-                return art_tuple_to_art_detail_obj(art, joined=True)
+                return art_tuple_to_art_detail_obj(art, art_join_like_join_artist=True)
 
             #Pass in a list of conditions (eg:["condA", "condB"])
             #Note: Natural join for now
@@ -176,7 +191,7 @@ class DbApiInstance():
                     sql = "SELECT * FROM art NATURAL JOIN artist;"
                 self.cursor.execute(sql)
                 art_tuples = self.cursor.fetchall()
-                return [art_tuple_to_art_detail_obj(a) for a in art_tuples]
+                return [art_tuple_to_art_detail_obj(a, art_join_artist=True) for a in art_tuples]
 
             #Gets unique styles for search options
             def get_unique_styles(self):
@@ -263,29 +278,29 @@ class DbApiInstance():
                 # May want to create separate processes to handle similarity computation
                 #self.compute_similarities(IMAGES_DIR=IMAGES_DIR, base_id=self.cursor.lastrowid, base_img_fname=file_name)
 
-                path = os.path.abspath(__file__)
-                dirname = os.path.dirname(path)
-                script_path = os.path.join(dirname, 'compute_simscore.py')
-                cmd_str = "python {} {} {} {}".format(script_path, IMAGES_DIR, self.cursor.lastrowid, str(file_name))
+                # path = os.path.abspath(__file__)
+                # dirname = os.path.dirname(path)
+                # script_path = os.path.join(dirname, 'compute_simscore.py')
+                # cmd_str = "python {} {} {} {}".format(script_path, IMAGES_DIR, self.cursor.lastrowid, str(file_name))
+                #
+                # proc = subprocess.Popen([cmd_str], shell=True, stdin=None, stdout=None, stderr=None, close_fds=True)
 
-                proc = subprocess.Popen([cmd_str], shell=True, stdin=None, stdout=None, stderr=None, close_fds=True)
 
-
-            def compute_similarities(self, IMAGES_DIR, base_id, base_img_fname):
-                base_img_path = os.path.join(IMAGES_DIR, base_img_fname)
-                sql = "SELECT id, file_name FROM art WHERE id <> {}".format(base_id)
-                self.cursor.execute(sql)
-                arts = self.cursor.fetchall()
-                print("Comparing art # {} with: ".format(base_id), arts)
-                for art in arts:
-                    target_art_id = art[0]
-                    target_image_path = os.path.join(IMAGES_DIR, art[1])
-
-                    sql = "INSERT INTO similarity (base_art_id, target_art_id, cos_sim) VALUES ({}, {}, {});"\
-                        .format(base_id, target_art_id, cos_sim(base_img_path, target_image_path))
-                    self.cursor.execute(sql)
-
-                self.dbconn.commit()
+            # def compute_similarities(self, IMAGES_DIR, base_id, base_img_fname):
+            #     base_img_path = os.path.join(IMAGES_DIR, base_img_fname)
+            #     sql = "SELECT id, file_name FROM art WHERE id <> {}".format(base_id)
+            #     self.cursor.execute(sql)
+            #     arts = self.cursor.fetchall()
+            #     print("Comparing art # {} with: ".format(base_id), arts)
+            #     for art in arts:
+            #         target_art_id = art[0]
+            #         target_image_path = os.path.join(IMAGES_DIR, art[1])
+            #
+            #         sql = "INSERT INTO similarity (base_art_id, target_art_id, cos_sim) VALUES ({}, {}, {});"\
+            #             .format(base_id, target_art_id, cos_sim(base_img_path, target_image_path))
+            #         self.cursor.execute(sql)
+            #
+            #     self.dbconn.commit()
 
 
             def execute_sql(self, raw_sql, vals=None, return_type=None):
