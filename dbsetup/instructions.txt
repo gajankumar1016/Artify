@@ -5,7 +5,7 @@
 2. Write the following line in the secrets.py file:
         dbpassword = "<insert root db password here>"
 
-3. Run "python3 setupcsv.py" and follow instructions on top on that python file/
+3. Run "python3 setupcsv.py" and follow instructions on top on that python file.
 (This step will completely erase existing artwork, so unless you are testing specifically
 for this, skip this step)
 
