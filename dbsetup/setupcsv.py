@@ -11,15 +11,14 @@ should resume the download."""
 # for git's sake)
 num_artworks = 30
 
-if last_j == 0:
-    f = open("artinfo.csv", "w")
-    f.truncate()
-    f.close()
 
-    with open('artinfo.csv', mode='a') as art_file:
-        art_adder = csv.writer(art_file, delimiter='|', quotechar='"', quoting=csv.QUOTE_NONNUMERIC)
-        art_adder.writerow(["Id", "FileName", "Title", "Artist", "Year", "Country", "Style", "Link"])
+f = open("artinfo.csv", "w")
+f.truncate()
+f.close()
 
+with open('artinfo.csv', mode='a') as art_file:
+    art_adder = csv.writer(art_file, delimiter='|', quotechar='"', quoting=csv.QUOTE_NONNUMERIC)
+    art_adder.writerow(["Id", "FileName", "Title", "Artist", "Year", "Country", "Style", "Link"])
 
 
 # Top 600 most visited paintings
