@@ -3,8 +3,9 @@ import csv
 import time
 
 """Note: The url server might not respond because of url server request limits
-on the free trial use of this API. In such a case, simply wait about 5 seconds
-and press 'ctrl' + C ONCE and the adding of artworks should result"""
+on the free trial use of this API. If artworks stop getting added (i.e. no feedback from terminal),
+simply wait about 5 seconds and press 'ctrl' + C ONCE and the code's error handling
+should resume the download."""
 
 # Use this to specify how many additional paintings you want (for now, I've only added 30
 # for git's sake)
