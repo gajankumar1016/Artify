@@ -11,7 +11,6 @@ should resume the download."""
 # for git's sake)
 num_artworks = 30
 
-
 f = open("artinfo.csv", "w")
 f.truncate()
 f.close()
