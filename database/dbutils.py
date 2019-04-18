@@ -29,7 +29,6 @@ def art_tuple_to_art_detail_obj(art_tuple, art_join_like_join_artist=False, art_
     elif art_join_artist:
         foo = ArtDetail(id=art_tuple[0], title=art_tuple[1], file_name=art_tuple[3], year=art_tuple[4],
                          style=art_tuple[6], artist=art_tuple[10])
-        print(foo)
         return foo
 
     return ArtDetail(id=art_tuple[0], title=art_tuple[1], file_name=art_tuple[3], year=art_tuple[4], style=art_tuple[6])
@@ -133,7 +132,7 @@ class DbApiInstance():
                 return profile_tuple_to_profile_detail_obj(result)
 
 
-            def get_recommended_art(self, user_id, limit=20):
+            def get_recommended_art(self, user_id, limit=300):
                 sql = "SELECT * FROM likes WHERE user_id = %s"
                 self.cursor.execute(sql, (user_id,))
                 likes = self.cursor.fetchall()

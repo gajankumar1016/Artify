@@ -1,5 +1,6 @@
 import urllib.request, json
 import csv
+import argparse
 import time
 
 """Note: The url server might not respond because of url server request limits
@@ -9,7 +10,14 @@ should resume the download."""
 
 # Use this to specify how many additional paintings you want (for now, I've only added 30
 # for git's sake)
-num_artworks = 30
+# num_artworks = 30
+
+# Usage: python setupcsv.py -n <number of artworks to download>
+ap = argparse.ArgumentParser()
+ap.add_argument("-n", "--num_artworks", type=int, required=True, help="Number of artworks to download")
+args = vars(ap.parse_args())
+num_artworks = args["num_artworks"]
+
 
 f = open("artinfo.csv", "w")
 f.truncate()
