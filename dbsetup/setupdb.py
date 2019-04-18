@@ -160,5 +160,11 @@ with DbApiInstance() as artifyDbAPI:
         if not artist:
             artist = artifyDbAPI.insert_artist(row["Artist"])
 
+        year = None
+        try:
+            year = int(row["Year"])
+        except Exception as e:
+            pass
+
         artifyDbAPI.insert_art(IMAGES_DIR="../devimages", title=row["Title"], file_name=row["FileName"],
-                               year=row["Year"], style=row["Style"], artist_id=artist.id)
+                               year=year, style=row["Style"], artist_id=artist.id)
