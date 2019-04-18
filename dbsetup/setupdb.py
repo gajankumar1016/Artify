@@ -151,8 +151,6 @@ mycursor.execute(create_similarity)
 mycursor.close()
 mydb.close()
 
-
-
 # Add starter artworks
 df = pd.read_csv('./artinfo.csv', sep="|")
 
