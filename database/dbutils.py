@@ -28,7 +28,7 @@ def art_tuple_to_art_detail_obj(art_tuple, art_join_like_join_artist=False, art_
                          style=art_tuple[6], is_liked=bool(art_tuple[9]), artist=art_tuple[12])
     elif art_join_artist:
         foo = ArtDetail(id=art_tuple[0], title=art_tuple[1], file_name=art_tuple[3], year=art_tuple[4],
-                         style=art_tuple[6], artist=art_tuple[9])
+                         style=art_tuple[6], artist=art_tuple[10])
         print(foo)
         return foo
 
@@ -177,7 +177,7 @@ class DbApiInstance():
             #Pass in a list of conditions (eg:["condA", "condB"])
             #Note: Natural join for now
             def get_art_by_cond(self, conds):
-                sql = "SELECT * FROM art NATURAL JOIN artist WHERE "
+                sql = "SELECT * FROM art LEFT JOIN artist ON art.artist_id = artist.id WHERE "
                 for i in range(len(conds)):
                     if len(conds)>1:
                         sql += '('
@@ -188,7 +188,7 @@ class DbApiInstance():
                         sql += ' AND '
                 sql += ';'
                 if len(conds) == 0:
-                    sql = "SELECT * FROM art NATURAL JOIN artist;"
+                    sql = "SELECT * FROM art LEFT JOIN artist ON art.artist_id = artist.id;"
                 self.cursor.execute(sql)
                 art_tuples = self.cursor.fetchall()
                 return [art_tuple_to_art_detail_obj(a, art_join_artist=True) for a in art_tuples]
