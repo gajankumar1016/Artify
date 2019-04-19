@@ -289,8 +289,25 @@ class DbApiInstance():
                 string_final = ", ".join(str(x) for x in final)
                 #print(string_final)
                 #sql = "SELECT * FROM art WHERE id IN " + "(" + string_final + ")"
-                sql = "SELECT * FROM (SELECT * FROM art WHERE id IN " + "(" + string_final + ")) AS temp" + " LEFT JOIN(likes, artist) ON (temp.id = likes.art_id AND temp.artist_id = artist.id AND likes.user_id =" + str(user_id) + ")"
+                #sql = "SELECT * FROM (SELECT * FROM art WHERE id IN " + "(" + string_final + ")) AS temp" + " LEFT JOIN(likes, artist) ON (temp.id = likes.art_id AND temp.artist_id = artist.id AND likes.user_id =" + str(user_id) + ")"
                 #print(sql)
+
+                sql ="""
+                SELECT *
+                FROM (SELECT * FROM art WHERE id IN ({})) AS temp
+                LEFT JOIN likes ON (temp.id = likes.art_id AND likes.user_id = {})
+                LEFT JOIN artist ON temp.artist_id = artist.id""".format(string_final, user_id)
+
+               # If user not liked any art return all art
+                if not string_final:
+                    sql = """
+                    SELECT *
+                    FROM art
+                    LEFT JOIN likes ON (art.id = likes.art_id AND likes.user_id = {})
+                    LEFT JOIN artist ON art.artist_id = artist.id""".format(user_id)
+                    """
+                """
+
                 self.cursor.execute(sql)
                 recommended_art = self.cursor.fetchall()
                 #print(recommended_art)
