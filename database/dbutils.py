@@ -6,6 +6,7 @@ import mysql.connector
 from .secrets import dbpassword
 # import subprocess
 # from similarity_model import cos_sim
+import numpy as np
 
 
 class ArtDetail:
@@ -52,6 +53,103 @@ class UserDetail:
 def profile_tuple_to_profile_detail_obj(user_tuple):
     return UserDetail(username=user_tuple[1], age=user_tuple[3], gender="M" if user_tuple[4] else "F",
                           location=user_tuple[5])
+
+class MF():
+
+    def __init__(self, R, K, alpha, beta, iterations):
+        #based on https://www.analyticsvidhya.com/blog/2018/06/comprehensive-guide-recommendation-engine-python/
+
+        #Perform matrix factorization to predict empty
+        #entries in a matrix.
+
+        #Arguments
+        #- R (ndarray)   : user-item rating matrix
+        #- K (int)       : number of latent dimensions
+        #- alpha (float) : learning rate
+        #- beta (float)  : regularization parameter
+
+
+        self.R = R
+        self.num_users, self.num_items = R.shape
+        self.K = K
+        self.alpha = alpha
+        self.beta = beta
+        self.iterations = iterations
+
+    def train(self):
+        # Initialize user and item latent feature matrice
+        self.P = np.random.normal(scale=1./self.K, size=(self.num_users, self.K))
+        self.Q = np.random.normal(scale=1./self.K, size=(self.num_items, self.K))
+
+        # Initialize the biases
+        self.b_u = np.zeros(self.num_users)
+        self.b_i = np.zeros(self.num_items)
+        self.b = np.mean(self.R[np.where(self.R != 0)])
+
+        # Create a list of training samples
+        self.samples = [
+            (i, j, self.R[i, j])
+            for i in range(self.num_users)
+            for j in range(self.num_items)
+            if self.R[i, j] > 0
+        ]
+
+        # Perform stochastic gradient descent for number of iterations
+        training_process = []
+        for i in range(self.iterations):
+            np.random.shuffle(self.samples)
+            self.sgd()
+            mse = self.mse()
+            training_process.append((i, mse))
+            if (i+1) % 10 == 0:
+                print("Iteration: %d ; error = %.4f" % (i+1, mse))
+
+        return training_process
+
+    def mse(self):
+
+        #A function to compute the total mean square error
+
+        xs, ys = self.R.nonzero()
+        predicted = self.full_matrix()
+        error = 0
+        for x, y in zip(xs, ys):
+            error += pow(self.R[x, y] - predicted[x, y], 2)
+        return np.sqrt(error)
+
+    def sgd(self):
+
+        #Perform stochastic gradient descent
+
+        for i, j, r in self.samples:
+            # Computer prediction and error
+            prediction = self.get_rating(i, j)
+            e = (r - prediction)
+
+            # Update biases
+            self.b_u[i] += self.alpha * (e - self.beta * self.b_u[i])
+            self.b_i[j] += self.alpha * (e - self.beta * self.b_i[j])
+
+            # Create copy of row of P since we need to update it but use older values for update on Q
+            P_i = self.P[i, :][:]
+
+            # Update user and item latent feature matrices
+            self.P[i, :] += self.alpha * (e * self.Q[j, :] - self.beta * self.P[i,:])
+            self.Q[j, :] += self.alpha * (e * P_i - self.beta * self.Q[j,:])
+
+    def get_rating(self, i, j):
+
+        #Get the predicted rating of user i and item j
+
+        prediction = self.b + self.b_u[i] + self.b_i[j] + self.P[i, :].dot(self.Q[j, :].T)
+        return prediction
+
+    def full_matrix(self):
+
+        #Compute the full matrix using the resultant biases, P and Q
+
+        return self.b + self.b_u[:,np.newaxis] + self.b_i[np.newaxis:,] + self.P.dot(self.Q.T)
+
 
 
 
@@ -133,20 +231,71 @@ class DbApiInstance():
 
 
             def get_recommended_art(self, user_id, limit=300):
+
+                #art user likes retrieved
                 sql = "SELECT * FROM likes WHERE user_id = %s"
                 self.cursor.execute(sql, (user_id,))
                 likes = self.cursor.fetchall()
-                # TODO: Do a bunch of joins instead and actually make a useful query
 
-                sql = """
-                SELECT *
-                FROM art LEFT JOIN likes ON art.id = likes.art_id AND likes.user_id = %s
-                JOIN artist ON art.artist_id = artist.id
-                LIMIT %s;
-                """
-                self.cursor.execute(sql, (user_id, limit))
-                art_tuples = self.cursor.fetchall()
-                return [art_tuple_to_art_detail_obj(a, art_join_like_join_artist=True) for a in art_tuples]
+
+                sql = "SELECT * FROM likes"
+                self.cursor.execute(sql)
+                all_likes = self.cursor.fetchall()
+
+
+                sql = "SELECT COUNT(DISTINCT id) FROM user"
+                self.cursor.execute(sql)
+                unique_users = self.cursor.fetchall()
+                for u in unique_users:
+                    user_count = int(u[0])
+
+                sql = "SELECT COUNT(id) FROM art"
+                self.cursor.execute(sql)
+                num_art = self.cursor.fetchall()
+                for n in num_art:
+                    art_count = int(n[0])
+
+
+                user_liked = []
+                liked_art = []
+                matrix = [[0 for x in range(art_count)] for y in range(user_count)]
+
+                for a in all_likes:
+                    #build matrix
+                    user, liked = a
+                    matrix[user-1][liked-1] = 1;
+
+                    user_liked.append(user)
+                    liked_art.append(liked)
+
+
+                R = np.array(matrix)
+
+                mf = MF(R, K=20, alpha=0.001, beta=0.01, iterations=100)
+                training_process = mf.train()
+                predictions = np.array(mf.full_matrix())
+                final = []
+                for i in range(user_count):
+                    for j in range(art_count):
+                        if((predictions[i][j] >= 1) and (j+1 not in final) and (i+1 == user_id)):
+                            final.append(j+1)
+
+
+
+                #print(R)
+                #print()
+                #print("P x Q:")
+                #print(mf.full_matrix())
+                string_final = ", ".join(str(x) for x in final)
+                #print(string_final)
+                #sql = "SELECT * FROM art WHERE id IN " + "(" + string_final + ")"
+                sql = "SELECT * FROM (SELECT * FROM art WHERE id IN " + "(" + string_final + ")) AS temp" + " LEFT JOIN(likes, artist) ON (temp.id = likes.art_id AND temp.artist_id = artist.id AND likes.user_id =" + str(user_id) + ")"
+                #print(sql)
+                self.cursor.execute(sql)
+                recommended_art = self.cursor.fetchall()
+                #print(recommended_art)
+
+                return [art_tuple_to_art_detail_obj(a, art_join_like_join_artist= True) for a in recommended_art]
 
 
             def get_user_art(self, user_id):
@@ -164,10 +313,10 @@ class DbApiInstance():
 
             def get_art_by_id(self, artid):
                 sql = """
-                SELECT * 
-                FROM art 
-                LEFT JOIN likes ON art.id = likes.art_id 
-                JOIN artist ON art.artist_id = artist.id 
+                SELECT *
+                FROM art
+                LEFT JOIN likes ON art.id = likes.art_id
+                JOIN artist ON art.artist_id = artist.id
                 WHERE art.id = %s;"""
                 self.cursor.execute(sql, (artid,))
                 art = self.cursor.fetchone()
@@ -242,7 +391,7 @@ class DbApiInstance():
                     return None
                 return artist_tuple_to_artist_detail_obj(artist)
 
-            #Get all artists for search options 
+            #Get all artists for search options
             def get_all_artists(self):
                 sql = "SELECT * FROM artist ORDER BY name;"
                 self.cursor.execute(sql)
