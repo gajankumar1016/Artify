@@ -231,7 +231,6 @@ class DbApiInstance():
 
 
             def get_recommended_art(self, user_id, limit=300):
-
                 #art user likes retrieved
                 sql = "SELECT * FROM likes WHERE user_id = %s"
                 self.cursor.execute(sql, (user_id,))
@@ -245,15 +244,14 @@ class DbApiInstance():
 
                 sql = "SELECT COUNT(DISTINCT id) FROM user"
                 self.cursor.execute(sql)
-                unique_users = self.cursor.fetchall()
-                for u in unique_users:
-                    user_count = int(u[0])
+                unique_users = self.cursor.fetchone()
+                user_count = unique_users[0]
+
 
                 sql = "SELECT COUNT(id) FROM art"
                 self.cursor.execute(sql)
-                num_art = self.cursor.fetchall()
-                for n in num_art:
-                    art_count = int(n[0])
+                num_art = self.cursor.fetchone()
+                art_count = num_art[0]
 
 
                 user_liked = []
@@ -263,7 +261,7 @@ class DbApiInstance():
                 for a in all_likes:
                     #build matrix
                     user, liked = a
-                    matrix[user-1][liked-1] = 1;
+                    matrix[user-1][liked-1] = 1
 
                     user_liked.append(user)
                     liked_art.append(liked)
@@ -292,22 +290,23 @@ class DbApiInstance():
                 #sql = "SELECT * FROM (SELECT * FROM art WHERE id IN " + "(" + string_final + ")) AS temp" + " LEFT JOIN(likes, artist) ON (temp.id = likes.art_id AND temp.artist_id = artist.id AND likes.user_id =" + str(user_id) + ")"
                 #print(sql)
 
+                # For recommended art, get like and artist info through joins
                 sql ="""
                 SELECT *
                 FROM (SELECT * FROM art WHERE id IN ({})) AS temp
                 LEFT JOIN likes ON (temp.id = likes.art_id AND likes.user_id = {})
-                LEFT JOIN artist ON temp.artist_id = artist.id""".format(string_final, user_id)
+                JOIN artist ON temp.artist_id = artist.id""".format(string_final, user_id)
 
-               # If user not liked any art return all art
+               # If no explicit recommendations generated, return all art with associated like and artist info
                 if not string_final:
                     sql = """
                     SELECT *
                     FROM art
                     LEFT JOIN likes ON (art.id = likes.art_id AND likes.user_id = {})
-                    LEFT JOIN artist ON art.artist_id = artist.id""".format(user_id)
-                    """
-                """
+                    JOIN artist ON art.artist_id = artist.id""".format(user_id)
 
+
+                # print(sql)
                 self.cursor.execute(sql)
                 recommended_art = self.cursor.fetchall()
                 #print(recommended_art)
