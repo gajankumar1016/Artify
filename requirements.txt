@@ -10,7 +10,7 @@ matplotlib==3.0.3
 mysql-connector==2.2.9
 mysqlclient==1.4.2.post1
 networkx==2.3
-nltk==3.4
+nltk==3.4.5
 numpy==1.16.2
 pandas==0.24.2
 Pillow==6.0.0
